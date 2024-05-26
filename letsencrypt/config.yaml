@@ -3,7 +3,7 @@ version: 5.0.18
 slug: letsencrypt
 name: Let's Encrypt
 description: Manage certificate from Let's Encrypt
-url: https://github.com/home-assistant/addons/tree/master/letsencrypt
+url: https://github.com/kylin7226/addons/tree/master/letsencrypt
 arch:
   - armhf
   - armv7
@@ -11,7 +11,7 @@ arch:
   - amd64
   - i386
 boot: manual
-image: homeassistant/{arch}-addon-letsencrypt
+image: kylin/{arch}-addon-letsencrypt
 init: false
 map:
   - ssl:rw
@@ -38,6 +38,8 @@ schema:
   key_type: list(ecdsa|rsa)?
   elliptic_curve: list(secp256r1|secp384r1)?
   dns:
+    aliyun_access_key: str?
+    aliyun_access_key_secret: str?
     aws_access_key_id: str?
     aws_secret_access_key: str?
     azure_config: str?
