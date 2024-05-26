@@ -206,13 +206,10 @@ elif [ "${CHALLENGE}" == "dns" ] && [ "${DNS_PROVIDER}" == "dns-websupport" ]; t
     PROVIDER_ARGUMENTS+=("--authenticator" "${DNS_PROVIDER}" "--${DNS_PROVIDER}-credentials" "/data/dnsapikey" "--${DNS_PROVIDER}-propagation-seconds" "${PROPAGATION_SECONDS}")
 
 # Aliyun
-elif [ "${DNS_PROVIDER}" == "dns-aliyun" ]; then
-    if bashio::config.exists 'dns.aliyun_access_key'; then
-        bashio::log.info "Use aliyun access key"
-        echo "certbot_dns_aliyun:dns_aliyun_access_key = $(bashio::config 'dns.aliyun_access_key')" >> /data/dnsapikey
-        echo "certbot_dns_aliyun:dns_aliyun_access_key_secret = $(bashio::config 'dns.aliyun_access_key_secret')" >> /data/dnsapikey
-    fi
-    PROVIDER_ARGUMENTS+=("--authenticator" "certbot-dns-aliyun:dns-aliyun" "--certbot-dns-aliyun:dns-aliyun-credentials" /data/dnsapikey)
+elif [ "${CHALLENGE}" == "dns" ] && [ "${DNS_PROVIDER}" == "dns-aliyun" ]; then
+    bashio::config.require 'dns.aliyun_access_key'
+    bashio::config.require 'dns.aliyun_access_key_secret'
+    PROVIDER_ARGUMENTS+=("--authenticator" "${DNS_PROVIDER}" "--${DNS_PROVIDER}-credentials" "/data/dnsapikey")
 
 #All others
 else
