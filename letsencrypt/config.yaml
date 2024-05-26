@@ -5,11 +5,7 @@ name: Let's Encrypt
 description: Manage certificate from Let's Encrypt
 url: https://github.com/kylin7226/addons/tree/master/letsencrypt
 arch:
-  - armhf
-  - armv7
   - aarch64
-  - amd64
-  - i386
 boot: manual
 image: kylin/{arch}-addon-letsencrypt
 init: false
