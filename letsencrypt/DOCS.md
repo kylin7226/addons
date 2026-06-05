@@ -42,6 +42,7 @@ There are two options to obtain certificates.
   <summary>Supported DNS providers</summary>
 
 ```txt
+dns-aliyun
 dns-lego (generic, supports any lego DNS provider)
 dns-azure
 dns-bunny
@@ -98,6 +99,8 @@ dns-websupport
 propagation_seconds: 60
 lego_env: []
 lego_provider: ''
+aliyun_access_key: ''
+aliyun_access_key_secret: ''
 aws_access_key_id: ''
 aws_region: ''
 aws_secret_access_key: ''
@@ -402,6 +405,35 @@ Example using [Hetzner](https://go-acme.github.io/lego/dns/hetzner/) (equivalent
 - Each `lego_env` entry must be in `KEY=VALUE` format. Values containing `=` signs are supported (e.g., `KEY=val=ue`).
 - For providers that require credential files, place the file in the `/share/` folder and reference it as `/share/filename` in the environment variable.
 - The `propagation_seconds` setting generates a timeout variable based on the uppercased provider name (e.g., `HETZNER_PROPAGATION_TIMEOUT`). If your provider uses a different variable prefix, you can include the correct timeout variable directly in `lego_env` and omit `propagation_seconds`.
+
+</details>
+
+<details>
+  <summary>Alibaba Cloud (Aliyun) DNS</summary>
+
+```yaml
+email: your.email@example.com
+domains:
+  - your.domain.tld
+  - "*.your.domain.tld"
+certfile: fullchain.pem
+keyfile: privkey.pem
+challenge: dns
+dns:
+  provider: dns-aliyun
+  aliyun_access_key: LTAI5t...
+  aliyun_access_key_secret: your-secret-key
+  propagation_seconds: 60
+```
+
+**Prerequisites:**
+
+1. Create a RAM sub-user in the [Alibaba Cloud RAM Console](https://ram.console.aliyun.com/)
+2. Grant the `AliyunDNSFullAccess` permission to the RAM user
+3. Create an AccessKey for the RAM user and record the AccessKey ID and Secret
+4. Enter the AccessKey ID and Secret in the add-on configuration
+
+**Note:** The `dns-aliyun` provider is implemented as a legacy provider using the `certbot-dns-aliyun` plugin, as this provider is not yet supported by the generic lego library.
 
 </details>
 
@@ -1529,6 +1561,7 @@ You can in addition find the files via the **Samba** app within the "ssl" share.
 ## Supported DNS providers
 
 ```txt
+dns-aliyun
 dns-lego (generic, supports any lego DNS provider)
 dns-azure
 dns-bunny

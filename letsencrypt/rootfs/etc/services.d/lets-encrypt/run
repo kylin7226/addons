@@ -655,7 +655,10 @@ certbot certonly --non-interactive --keep-until-expiring --expand \
     --config-dir "$CERT_DIR" --work-dir "$WORK_DIR" \
     --preferred-challenges "$CHALLENGE" \
     "${ACME_ARGUMENTS[@]}" \
-    "${EAB_ARGUMENTS[@]}"
+    "${EAB_ARGUMENTS[@]}" || {
+    bashio::log.error "Failed to issue certificate"
+    exit 1
+}
 
 # Get the last modified cert directory and copy the cert and private key to store
 # shellcheck disable=SC2012
