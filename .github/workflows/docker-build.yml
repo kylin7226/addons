@@ -51,7 +51,30 @@ jobs:
         run: |
           VERSION=$(grep '^version:' letsencrypt/config.yaml | awk '{print $2}')
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "Full version: ${VERSION}"
+          echo "Version: ${VERSION}"
+          
+          # Read build args from build.yaml
+          ACME_VERSION=$(grep 'ACME_VERSION:' letsencrypt/build.yaml | awk '{print $2}')
+          CERTBOT_VERSION=$(grep 'CERTBOT_VERSION:' letsencrypt/build.yaml | awk '{print $2}')
+          CRYPTOGRAPHY_VERSION=$(grep 'CRYPTOGRAPHY_VERSION:' letsencrypt/build.yaml | awk '{print $2}')
+          CERTBOT_DNS_MULTI_VERSION=$(grep 'CERTBOT_DNS_MULTI_VERSION:' letsencrypt/build.yaml | awk '{print $2}')
+          CERTBOT_DNS_ALIYUN_VERSION=$(grep 'CERTBOT_DNS_ALIYUN_VERSION:' letsencrypt/build.yaml | awk '{print $2}')
+          CERTBOT_DNS_EURODNS_VERSION=$(grep 'CERTBOT_DNS_EURODNS_VERSION:' letsencrypt/build.yaml | awk '{print $2}')
+          CERTBOT_DNS_NORISNETWORK_VERSION=$(grep 'CERTBOT_DNS_NORISNETWORK_VERSION:' letsencrypt/build.yaml | awk '{print $2}')
+          CERTBOT_DNS_AZURE_VERSION=$(grep 'CERTBOT_DNS_AZURE_VERSION:' letsencrypt/build.yaml | awk '{print $2}')
+          CERTBOT_DNS_HURRICANE_ELECTRIC_VERSION=$(grep 'CERTBOT_DNS_HURRICANE_ELECTRIC_VERSION:' letsencrypt/build.yaml | awk '{print $2}')
+          
+          echo "ACME_VERSION=${ACME_VERSION}" >> $GITHUB_OUTPUT
+          echo "CERTBOT_VERSION=${CERTBOT_VERSION}" >> $GITHUB_OUTPUT
+          echo "CRYPTOGRAPHY_VERSION=${CRYPTOGRAPHY_VERSION}" >> $GITHUB_OUTPUT
+          echo "CERTBOT_DNS_MULTI_VERSION=${CERTBOT_DNS_MULTI_VERSION}" >> $GITHUB_OUTPUT
+          echo "CERTBOT_DNS_ALIYUN_VERSION=${CERTBOT_DNS_ALIYUN_VERSION}" >> $GITHUB_OUTPUT
+          echo "CERTBOT_DNS_EURODNS_VERSION=${CERTBOT_DNS_EURODNS_VERSION}" >> $GITHUB_OUTPUT
+          echo "CERTBOT_DNS_NORISNETWORK_VERSION=${CERTBOT_DNS_NORISNETWORK_VERSION}" >> $GITHUB_OUTPUT
+          echo "CERTBOT_DNS_AZURE_VERSION=${CERTBOT_DNS_AZURE_VERSION}" >> $GITHUB_OUTPUT
+          echo "CERTBOT_DNS_HURRICANE_ELECTRIC_VERSION=${CERTBOT_DNS_HURRICANE_ELECTRIC_VERSION}" >> $GITHUB_OUTPUT
+          
+          echo "All build args extracted from build.yaml"
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -66,14 +89,14 @@ jobs:
           build-args: |
             BUILD_FROM=${{ matrix.base_image }}
             BUILD_ARCH=${{ matrix.arch }}
-            ACME_VERSION=3.3.0
-            CERTBOT_DNS_MULTI_VERSION=4.33.0
-            CERTBOT_DNS_ALIYUN_VERSION=2.0.0
-            CERTBOT_DNS_EURODNS_VERSION=1.8.1
-            CERTBOT_DNS_NORISNETWORK_VERSION=0.3.0
-            CERTBOT_DNS_AZURE_VERSION=2.6.1
-            CERTBOT_DNS_HURRICANE_ELECTRIC_VERSION=0.1.0
-            CERTBOT_VERSION=3.3.0
-            CRYPTOGRAPHY_VERSION=44.0.2
+            ACME_VERSION=${{ steps.meta.outputs.ACME_VERSION }}
+            CERTBOT_DNS_MULTI_VERSION=${{ steps.meta.outputs.CERTBOT_DNS_MULTI_VERSION }}
+            CERTBOT_DNS_ALIYUN_VERSION=${{ steps.meta.outputs.CERTBOT_DNS_ALIYUN_VERSION }}
+            CERTBOT_DNS_EURODNS_VERSION=${{ steps.meta.outputs.CERTBOT_DNS_EURODNS_VERSION }}
+            CERTBOT_DNS_NORISNETWORK_VERSION=${{ steps.meta.outputs.CERTBOT_DNS_NORISNETWORK_VERSION }}
+            CERTBOT_DNS_AZURE_VERSION=${{ steps.meta.outputs.CERTBOT_DNS_AZURE_VERSION }}
+            CERTBOT_DNS_HURRICANE_ELECTRIC_VERSION=${{ steps.meta.outputs.CERTBOT_DNS_HURRICANE_ELECTRIC_VERSION }}
+            CERTBOT_VERSION=${{ steps.meta.outputs.CERTBOT_VERSION }}
+            CRYPTOGRAPHY_VERSION=${{ steps.meta.outputs.CRYPTOGRAPHY_VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
