@@ -38,17 +38,20 @@ jobs:
         with:
           files: |
             **
-          separator: ','
 
       - name: Debug changed files
         if: github.event_name == 'push'
         run: |
           echo "=== Debug Info ==="
           echo "Event: ${{ github.event_name }}"
-          echo "Changed files (all): ${{ steps.changed_files_push.outputs.all_changed_files }}"
-          echo "Changed files (modified): ${{ steps.changed_files_push.outputs.modified_files }}"
-          echo "All outputs:"
-          env | grep CHANGED_FILES
+          echo "Changed files (all):"
+          echo "${{ steps.changed_files_push.outputs.all_changed_files }}"
+          echo "---"
+          echo "Changed files (modified):"
+          echo "${{ steps.changed_files_push.outputs.modified_files }}"
+          echo "---"
+          echo "All outputs (first 20):"
+          env | grep CHANGED_FILES | head -20
 
       - name: Get add-ons
         id: addons
@@ -79,34 +82,55 @@ jobs:
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             changed_files="${{ steps.changed_files.outputs.all }}"
           elif [[ "${{ github.event_name }}" == "push" ]]; then
+            # tj-actions/changed-files outputs newline-separated by default
             changed_files="${{ steps.changed_files_push.outputs.all_changed_files }}"
           fi
 
-          echo "Changed files raw: $changed_files"
-          echo "Changed files type: $(echo "$changed_files" | wc -w) words"
+          echo "Changed files raw:"
+          echo "$changed_files"
+          echo "---"
 
           # For push/PR, detect changed files
           declare -a changed_addons
 
-          # Convert comma-separated to array
-          IFS=',' read -ra files_array <<< "$changed_files"
-
-          for addon in ${{ steps.addons.outputs.addons }}; do
-            echo "Checking addon: $addon"
-            for file in "${files_array[@]}"; do
-              if [[ "$file" =~ ^${addon}/ ]]; then
-                for mon_file in ${{ env.MONITORED_FILES }}; do
-                  if [[ "$file" == "${addon}/${mon_file}" ]]; then
-                    echo "Found monitored file: $file"
-                    if [[ ! " ${changed_addons[*]} " =~ " ${addon} " ]]; then
-                      changed_addons+=("$addon")
-                      break 2
+          # Process files based on separator
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            # tj-actions uses newline separator by default
+            while IFS= read -r file; do
+              [[ -z "$file" ]] && continue
+              for addon in ${{ steps.addons.outputs.addons }}; do
+                if [[ "$file" =~ ^${addon}/ ]]; then
+                  for mon_file in ${{ env.MONITORED_FILES }}; do
+                    if [[ "$file" == "${addon}/${mon_file}" ]]; then
+                      echo "Found monitored file: $file"
+                      if [[ ! " ${changed_addons[*]} " =~ " ${addon} " ]]; then
+                        changed_addons+=("$addon")
+                        echo "Added addon: $addon"
+                      fi
                     fi
-                  fi
-                done
-              fi
+                  done
+                fi
+              done
+            done <<< "$changed_files"
+          else
+            # PR uses comma separator
+            IFS=',' read -ra files_array <<< "$changed_files"
+            for addon in ${{ steps.addons.outputs.addons }}; do
+              for file in "${files_array[@]}"; do
+                if [[ "$file" =~ ^${addon}/ ]]; then
+                  for mon_file in ${{ env.MONITORED_FILES }}; do
+                    if [[ "$file" == "${addon}/${mon_file}" ]]; then
+                      echo "Found monitored file: $file"
+                      if [[ ! " ${changed_addons[*]} " =~ " ${addon} " ]]; then
+                        changed_addons+=("$addon")
+                        echo "Added addon: $addon"
+                      fi
+                    fi
+                  done
+                fi
+              done
             done
-          done
+          fi
 
           echo "Detected changed addons: ${changed_addons[*]}"
           echo "Changed addons count: ${#changed_addons[@]}"
