@@ -44,6 +44,10 @@ jobs:
           ADDONS: ${{ steps.addons.outputs.addons }}
           CHANGED_FILES: ${{ steps.changed_files.outputs.all }}
         run: |
+          echo "ADDONS: ${ADDONS}"
+          echo "CHANGED_FILES: ${CHANGED_FILES}"
+          echo "MONITORED_FILES: ${{ env.MONITORED_FILES }}"
+
           declare -a changed_addons
           for addon in ${ADDONS}; do
             if [[ "${CHANGED_FILES}" =~ $addon ]]; then
@@ -57,14 +61,25 @@ jobs:
             fi
           done
 
+          echo "changed_addons array: ${changed_addons[@]}"
+
           changed=$(echo ${changed_addons[@]} | rev | cut -c 2- | rev)
+          echo "changed variable: '$changed'"
+
           if [[ -n ${changed} ]]; then
             echo "Changed add-ons: $changed";
             echo "changed=true" >> "$GITHUB_OUTPUT";
             echo "addons=[$changed]" >> "$GITHUB_OUTPUT";
           else
             echo "No add-on had any monitored files changed (${{ env.MONITORED_FILES }})";
+            # Set default values to ensure outputs exist
+            echo "changed=false" >> "$GITHUB_OUTPUT";
+            echo "addons=[]" >> "$GITHUB_OUTPUT";
           fi
+
+          echo "=== Final outputs ==="
+          echo "changed output: $(grep '^changed=' $GITHUB_OUTPUT || echo 'NOT SET')"
+          echo "addons output: $(grep '^addons=' $GITHUB_OUTPUT || echo 'NOT SET')"
 
   build:
     needs: init
