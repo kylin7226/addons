@@ -72,15 +72,18 @@ jobs:
 
           # For push/PR, detect changed files
           declare -a changed_addons
+          
+          # Convert comma-separated to array
+          IFS=',' read -ra files_array <<< "$changed_files"
+          
           for addon in ${{ steps.addons.outputs.addons }}; do
             echo "Checking addon: $addon"
-            # Convert comma-separated to newline-separated for easier matching
-            echo "$changed_files" | tr ',' '\n' | while read -r file; do
-              if [[ "$file" =~ ^$addon/ ]]; then
+            for file in "${files_array[@]}"; do
+              if [[ "$file" =~ ^${addon}/ ]]; then
                 for mon_file in ${{ env.MONITORED_FILES }}; do
-                  if [[ "$file" == "$addon/$mon_file" ]]; then
+                  if [[ "$file" == "${addon}/${mon_file}" ]]; then
                     echo "Found monitored file: $file"
-                    if [[ ! " ${changed_addons[@]} " =~ " ${addon} " ]]; then
+                    if [[ ! " ${changed_addons[*]} " =~ " ${addon} " ]]; then
                       changed_addons+=("$addon")
                       break 2
                     fi
@@ -90,7 +93,7 @@ jobs:
             done
           done
 
-          echo "Detected changed addons: ${changed_addons[@]}"
+          echo "Detected changed addons: ${changed_addons[*]}"
 
           # Format as JSON array
           json_addons=""
