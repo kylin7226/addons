@@ -21,12 +21,11 @@ jobs:
 
     strategy:
       matrix:
+        arch: [amd64, aarch64]
         include:
           - arch: amd64
-            base_image: ghcr.io/home-assistant/amd64-base-debian:trixie-2025.12.2
             platform: linux/amd64
           - arch: aarch64
-            base_image: ghcr.io/home-assistant/aarch64-base-debian:trixie-2025.12.2
             platform: linux/arm64
 
     steps:
@@ -52,6 +51,11 @@ jobs:
           VERSION=$(grep '^version:' letsencrypt/config.yaml | awk '{print $2}')
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "Version: ${VERSION}"
+          
+          # Read base image from build.yaml based on architecture
+          BUILD_FROM=$(grep "${{ matrix.arch }}:" letsencrypt/build.yaml | awk '{print $2}')
+          echo "BUILD_FROM=${BUILD_FROM}" >> $GITHUB_OUTPUT
+          echo "Base image for ${{ matrix.arch }}: ${BUILD_FROM}"
           
           # Read build args from build.yaml
           ACME_VERSION=$(grep 'ACME_VERSION:' letsencrypt/build.yaml | awk '{print $2}')
@@ -87,7 +91,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.arch }}-addon-letsencrypt:${{ steps.meta.outputs.version }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.arch }}-addon-letsencrypt:latest
           build-args: |
-            BUILD_FROM=${{ matrix.base_image }}
+            BUILD_FROM=${{ steps.meta.outputs.BUILD_FROM }}
             BUILD_ARCH=${{ matrix.arch }}
             ACME_VERSION=${{ steps.meta.outputs.ACME_VERSION }}
             CERTBOT_DNS_MULTI_VERSION=${{ steps.meta.outputs.CERTBOT_DNS_MULTI_VERSION }}
