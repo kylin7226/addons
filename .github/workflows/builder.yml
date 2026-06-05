@@ -65,7 +65,7 @@ jobs:
           echo "=== Step: Get changed add-ons ==="
           echo "Event: ${{ github.event_name }}"
           echo "Addons: ${{ steps.addons.outputs.addons }}"
-          
+
           # For workflow_dispatch, build all addons
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             addons="$(echo ${{ steps.addons.outputs.addons }} | sed 's/ / /g' | sed 's/\([^ ]\)/"\1"/g' | sed 's/ /,/g')"
@@ -87,10 +87,10 @@ jobs:
 
           # For push/PR, detect changed files
           declare -a changed_addons
-          
+
           # Convert comma-separated to array
           IFS=',' read -ra files_array <<< "$changed_files"
-          
+
           for addon in ${{ steps.addons.outputs.addons }}; do
             echo "Checking addon: $addon"
             for file in "${files_array[@]}"; do
@@ -129,7 +129,7 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT";
             echo "addons=[]" >> "$GITHUB_OUTPUT";
           fi
-          
+
           echo "=== Final outputs ==="
           echo "changed: $(cat $GITHUB_OUTPUT | grep '^changed=' | cut -d= -f2)"
           echo "addons: $(cat $GITHUB_OUTPUT | grep '^addons=' | cut -d= -f2)"
