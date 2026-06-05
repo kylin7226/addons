@@ -1,0 +1,79 @@
+---
+name: Build and Publish Docker Images
+
+on:
+  push:
+    branches: ["master"]
+    paths:
+      - "letsencrypt/**"
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: kylin7226/addons
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            base_image: ghcr.io/home-assistant/amd64-base-debian:trixie-2025.12.2
+            platform: linux/amd64
+          - arch: aarch64
+            base_image: ghcr.io/home-assistant/aarch64-base-debian:trixie-2025.12.2
+            platform: linux/arm64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        run: |
+          VERSION=$(grep '^version:' letsencrypt/config.yaml | awk '{print $2}')
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Full version: ${VERSION}"
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./letsencrypt
+          file: ./letsencrypt/Dockerfile
+          platforms: ${{ matrix.platform }}
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.arch }}-addon-letsencrypt:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.arch }}-addon-letsencrypt:latest
+          build-args: |
+            BUILD_FROM=${{ matrix.base_image }}
+            BUILD_ARCH=${{ matrix.arch }}
+            ACME_VERSION=3.3.0
+            CERTBOT_DNS_MULTI_VERSION=4.33.0
+            CERTBOT_DNS_ALIYUN_VERSION=2.0.0
+            CERTBOT_DNS_EURODNS_VERSION=1.8.1
+            CERTBOT_DNS_NORISNETWORK_VERSION=0.3.0
+            CERTBOT_DNS_AZURE_VERSION=2.6.1
+            CERTBOT_DNS_HURRICANE_ELECTRIC_VERSION=0.1.0
+            CERTBOT_VERSION=3.3.0
+            CRYPTOGRAPHY_VERSION=44.0.2
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
