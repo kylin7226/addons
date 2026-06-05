@@ -14,29 +14,29 @@ env:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       packages: write
 
     strategy:
       matrix:
-        arch: [amd64, aarch64]
         include:
           - arch: amd64
             platform: linux/amd64
+            runner: ubuntu-24.04
           - arch: aarch64
             platform: linux/arm64
+            runner: ubuntu-24.04-arm
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: image=moby/buildkit:latest
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -44,6 +44,19 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Retry Docker pull
+        if: matrix.arch == 'aarch64'
+        run: |
+          # Retry pulling base image in case of network issues
+          for i in 1 2 3; do
+            if docker pull ${{ steps.meta.outputs.BUILD_FROM }}; then
+              echo "Successfully pulled base image"
+              break
+            fi
+            echo "Retry $i/3..."
+            sleep 10
+          done
 
       - name: Extract metadata
         id: meta
