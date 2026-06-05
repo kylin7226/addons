@@ -68,25 +68,41 @@ jobs:
             changed_files="${{ steps.changed_files_push.outputs.all_changed_files }}"
           fi
 
+          echo "Changed files: $changed_files"
+
           # For push/PR, detect changed files
           declare -a changed_addons
           for addon in ${{ steps.addons.outputs.addons }}; do
-            if echo "$changed_files" | grep -q "$addon"; then
-              for file in ${{ env.MONITORED_FILES }}; do
-                  if echo "$changed_files" | grep -q "$addon/$file"; then
-                    if [[ ! "${changed_addons[@]}" =~ $addon ]]; then
-                      changed_addons+=("\"${addon}\",");
+            echo "Checking addon: $addon"
+            # Convert comma-separated to newline-separated for easier matching
+            echo "$changed_files" | tr ',' '\n' | while read -r file; do
+              if [[ "$file" =~ ^$addon/ ]]; then
+                for mon_file in ${{ env.MONITORED_FILES }}; do
+                  if [[ "$file" == "$addon/$mon_file" ]]; then
+                    echo "Found monitored file: $file"
+                    if [[ ! " ${changed_addons[@]} " =~ " ${addon} " ]]; then
+                      changed_addons+=("$addon")
+                      break 2
                     fi
                   fi
-              done
-            fi
+                done
+              fi
+            done
           done
 
-          changed=$(echo ${changed_addons[@]} | rev | cut -c 2- | rev)
-          if [[ -n ${changed} ]]; then
-            echo "Changed add-ons: $changed";
+          echo "Detected changed addons: ${changed_addons[@]}"
+
+          # Format as JSON array
+          json_addons=""
+          for addon in "${changed_addons[@]}"; do
+            json_addons="${json_addons}\"${addon}\","
+          done
+          json_addons="[${json_addons%,}]"
+
+          if [[ ${#changed_addons[@]} -gt 0 ]]; then
+            echo "Changed add-ons: $json_addons";
             echo "changed=true" >> "$GITHUB_OUTPUT";
-            echo "addons=[$changed]" >> "$GITHUB_OUTPUT";
+            echo "addons=$json_addons" >> "$GITHUB_OUTPUT";
           else
             echo "No add-on had any monitored files changed (${{ env.MONITORED_FILES }})";
           fi
