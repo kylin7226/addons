@@ -1,0 +1,55 @@
+---
+configuration:
+  domains:
+    name: 域名
+    description: >-
+      要颁发证书的域名，使用 "*.yourdomain.com" 来申请通配符证书。
+  email:
+    name: 邮箱
+    description: 用于注册证书的电子邮件地址。
+  keyfile:
+    name: 私钥文件
+    description: 私钥文件的保存路径。
+  certfile:
+    name: 证书文件
+    description: 证书文件的保存路径。
+  challenge:
+    name: 验证方式
+    description: 用于验证域名的挑战类型（http 或 dns）。
+  acme_server:
+    name: 自定义 ACME 服务器
+    description: >-
+      默认情况下，本应用使用 Let's Encrypt 的服务器。但是，您可以指定不同的 ACME 服务器。
+  acme_root_ca_cert:
+    name: ACME 根 CA 证书
+    description: >-
+      仅在使用自定义 ACME 服务器时需要，该服务器使用需要添加到信任存储的不可信证书颁发机构 (CA) 签名的证书。
+  dns:
+    name: DNS
+    description: DNS 服务商配置
+  key_type:
+    name: 密钥类型
+    description: >-
+      选择证书密钥类型。如果未设置，将根据现有证书的密钥类型自动检测，或默认为 ecdsa。
+  elliptic_curve:
+    name: 椭圆曲线
+    description: >-
+      ECDSA 密钥的椭圆曲线。此选项必须与密钥类型设置为 ECDSA 时一起使用。如果未设置，将使用 Certbot 默认值。
+  dry_run:
+    name: 试运行
+    description: >-
+      执行 certbot 试运行以从 Let's Encrypt 请求证书。如果使用自定义服务器，则忽略此选项。
+  test_cert:
+    name: 申请测试证书
+    description: >-
+      从 Let's Encrypt 测试服务器获取测试证书。如果使用自定义服务器，则忽略此选项。
+  verbose:
+    name: 详细模式
+    description: >-
+      在详细模式下运行 certbot。
+  force_renew:
+    name: 强制更新
+    description: >-
+      即使证书尚未接近过期，也强制更新证书。
+network:
+  80/tcp: 仅在 HTTP 验证时需要
