@@ -43,7 +43,7 @@ jobs:
         run: |
           # For workflow_dispatch, build all addons
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            addons="$(echo ${{ steps.addons.outputs.addons }} | sed 's/ /,/g')"
+            addons="$(echo ${{ steps.addons.outputs.addons }} | sed 's/ / /g' | sed 's/\([^ ]\)/"\1"/g' | sed 's/ /,/g')"
             echo "Changed add-ons (workflow_dispatch): $addons";
             echo "changed=true" >> "$GITHUB_OUTPUT";
             echo "addons=[$addons]" >> "$GITHUB_OUTPUT";
