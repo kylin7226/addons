@@ -25,9 +25,20 @@ jobs:
         uses: actions/checkout@v4.1.6
 
       - name: Get changed files
-        if: github.event_name != 'workflow_dispatch'
         id: changed_files
+        if: github.event_name == 'pull_request'
         uses: masesgroup/retrieve-changed-files@v3.0.0
+        with:
+          format: 'csv'
+
+      - name: Get changed files (push)
+        id: changed_files_push
+        if: github.event_name == 'push'
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            **
+          separator: ','
 
       - name: Get add-ons
         id: addons
@@ -50,12 +61,19 @@ jobs:
             exit 0
           fi
 
+          # Get changed files based on event type
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            changed_files="${{ steps.changed_files.outputs.all }}"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            changed_files="${{ steps.changed_files_push.outputs.all_changed_files }}"
+          fi
+
           # For push/PR, detect changed files
           declare -a changed_addons
           for addon in ${{ steps.addons.outputs.addons }}; do
-            if [[ "${{ steps.changed_files.outputs.all }}" =~ $addon ]]; then
+            if echo "$changed_files" | grep -q "$addon"; then
               for file in ${{ env.MONITORED_FILES }}; do
-                  if [[ "${{ steps.changed_files.outputs.all }}" =~ $addon/$file ]]; then
+                  if echo "$changed_files" | grep -q "$addon/$file"; then
                     if [[ ! "${changed_addons[@]}" =~ $addon ]]; then
                       changed_addons+=("\"${addon}\",");
                     fi
