@@ -94,7 +94,7 @@ jobs:
           echo "All build args extracted from build.yaml"
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./letsencrypt
           file: ./letsencrypt/Dockerfile
